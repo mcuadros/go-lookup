@@ -15,55 +15,58 @@ type S struct{}
 var _ = Suite(&S{})
 
 func (s *S) TestLookup_Map(c *C) {
-	value, found := Lookup(map[string]int{"foo": 42}, "foo")
-	c.Assert(found, Equals, true)
+	value, err := Lookup(map[string]int{"foo": 42}, "foo")
+	c.Assert(err, IsNil)
 	c.Assert(value.Int(), Equals, int64(42))
 }
 
 func (s *S) TestLookup_Ptr(c *C) {
-	value, found := Lookup(&structFixture, "String")
-	c.Assert(found, Equals, true)
+	value, err := Lookup(&structFixture, "String")
+	c.Assert(err, IsNil)
 	c.Assert(value.String(), Equals, "foo")
 }
 
 func (s *S) TestLookup_StructBasic(c *C) {
-	value, found := Lookup(structFixture, "String")
-	c.Assert(found, Equals, true)
+	value, err := Lookup(structFixture, "String")
+	c.Assert(err, IsNil)
 	c.Assert(value.String(), Equals, "foo")
 }
 
 func (s *S) TestLookup_StructPlusMap(c *C) {
-	value, found := Lookup(structFixture, "Map", "foo")
-	c.Assert(found, Equals, true)
+	value, err := Lookup(structFixture, "Map", "foo")
+	c.Assert(err, IsNil)
 	c.Assert(value.Int(), Equals, int64(42))
 }
 
 func (s *S) TestAggregableLookup_StructIndex(c *C) {
-	value, found := Lookup(structFixture, "StructSlice", "Map", "foo")
+	value, err := Lookup(structFixture, "StructSlice", "Map", "foo")
 
-	c.Assert(found, Equals, true)
+	c.Assert(err, IsNil)
 	c.Assert(value.Interface(), DeepEquals, []int{42, 42})
 }
 
 func (s *S) TestAggregableLookup_StructNestedMap(c *C) {
-	value, found := Lookup(structFixture, "StructSlice[0]", "String")
+	value, err := Lookup(structFixture, "StructSlice[0]", "String")
 
-	c.Assert(found, Equals, true)
+	c.Assert(err, IsNil)
 	c.Assert(value.Interface(), DeepEquals, "foo")
 }
 
 func (s *S) TestAggregableLookup_StructNested(c *C) {
-	value, found := Lookup(structFixture, "StructSlice", "StructSlice", "String")
+	value, err := Lookup(structFixture, "StructSlice", "StructSlice", "String")
 
-	c.Assert(found, Equals, true)
+	c.Assert(err, IsNil)
 	c.Assert(value.Interface(), DeepEquals, []string{"bar", "foo", "qux", "baz"})
 }
 
 func (s *S) TestAggregableLookupString_Complex(c *C) {
-	value, found := LookupString(structFixture, "StructSlice.StructSlice")
-
-	c.Assert(found, Equals, true)
+	value, err := LookupString(structFixture, "StructSlice.StructSlice[0].String")
+	c.Assert(err, IsNil)
 	c.Assert(value.Interface(), DeepEquals, []string{"bar", "foo", "qux", "baz"})
+
+	value, err = LookupString(structFixture, "StructSlice[0].Map.foo")
+	c.Assert(err, IsNil)
+	c.Assert(value.Interface(), DeepEquals, 42)
 }
 
 func (s *S) TestMergeValue(c *C) {

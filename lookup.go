@@ -13,46 +13,49 @@ const (
 	IndexOpenChar  = "["
 )
 
-var ErrMalformedIndex = errors.New("Malformed index key")
+var (
+	ErrMalformedIndex    = errors.New("Malformed index key")
+	ErrInvalidIndexUsage = errors.New("Invalid index key usage")
+	ErrKeyNotFound       = errors.New("Unable to find the key")
+)
 
-func LookupString(i interface{}, path string) (reflect.Value, bool) {
+func LookupString(i interface{}, path string) (reflect.Value, error) {
 	return Lookup(i, strings.Split(path, SplitToken)...)
 }
 
-func Lookup(i interface{}, path ...string) (reflect.Value, bool) {
+func Lookup(i interface{}, path ...string) (reflect.Value, error) {
 	value := reflect.ValueOf(i)
 	var parent reflect.Value
+	var err error
 
 	for i, part := range path {
 		parent = value
 
-		var found bool
-		value, found = getValueByName(value, part)
-		if found {
+		value, err = getValueByName(value, part)
+		if err == nil {
 			continue
 		}
 
 		if !isAggregable(parent) {
-			return value, false
+			return value, err
 		}
 
-		value, found = aggreateAggregableValue(parent, path[i:])
+		value, err = aggreateAggregableValue(parent, path[i:])
 		break
 	}
 
-	return value, true
+	return value, err
 }
 
-func getValueByName(v reflect.Value, key string) (reflect.Value, bool) {
+func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 	var value reflect.Value
 	var index int
 	var err error
 
 	key, index, err = parseIndex(key)
 	if err != nil {
-		return value, false
+		return value, err
 	}
-
 	switch v.Kind() {
 	case reflect.Ptr:
 		return getValueByName(v.Elem(), key)
@@ -62,31 +65,35 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, bool) {
 		value = v.MapIndex(reflect.ValueOf(key))
 	}
 
+	if !value.IsValid() {
+		return reflect.Value{}, ErrKeyNotFound
+	}
+
 	if index != -1 {
 		if value.Type().Kind() != reflect.Slice {
-			return reflect.Value{}, false
+			return reflect.Value{}, ErrInvalidIndexUsage
 		}
 
 		value = value.Index(index)
 	}
 
-	return value, value.IsValid()
+	return value, nil
 }
 
-func aggreateAggregableValue(v reflect.Value, path []string) (reflect.Value, bool) {
+func aggreateAggregableValue(v reflect.Value, path []string) (reflect.Value, error) {
 	values := make([]reflect.Value, 0)
 
 	l := v.Len()
 	for i := 0; i < l; i++ {
-		value, found := Lookup(v.Index(i).Interface(), path...)
-		if !found {
-			return reflect.Value{}, false
+		value, err := Lookup(v.Index(i).Interface(), path...)
+		if err != nil {
+			return reflect.Value{}, err
 		}
 
 		values = append(values, value)
 	}
 
-	return mergeValue(values), true
+	return mergeValue(values), nil
 }
 
 func mergeValue(values []reflect.Value) reflect.Value {
