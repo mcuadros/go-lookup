@@ -1,6 +1,7 @@
 package lookup
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -117,6 +118,37 @@ func (s *S) TestParseIndexMalFormed(c *C) {
 	c.Assert(err, Equals, ErrMalformedIndex)
 	c.Assert(key, Equals, "")
 	c.Assert(index, Equals, -1)
+}
+
+func ExampleLookupString() {
+	type Member struct {
+		Name string
+	}
+
+	teams := map[string][]*Member{
+		"a-team": {
+			{Name: "Hannibal"}, {Name: "Murdock"}, {Name: "Faceman"}, {Name: "Baracus"},
+		},
+	}
+
+	value, _ := LookupString(teams, "a-team.Name")
+	fmt.Println(value.Interface())
+	// Output: [Hannibal Murdock Faceman Baracus]
+}
+
+func ExampleLookup() {
+	type ExampleStruct struct {
+		Values struct {
+			Foo int
+		}
+	}
+
+	i := ExampleStruct{}
+	i.Values.Foo = 10
+
+	value, _ := Lookup(i, "Values", "Foo")
+	fmt.Println(value.Interface())
+	// Output: 10
 }
 
 type MyStruct struct {
