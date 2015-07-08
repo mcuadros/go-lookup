@@ -121,19 +121,34 @@ func (s *S) TestParseIndexMalFormed(c *C) {
 }
 
 func ExampleLookupString() {
-	type Member struct {
-		Name string
+	type Cast struct {
+		Actor, Role string
 	}
 
-	teams := map[string][]*Member{
-		"a-team": {
-			{Name: "Hannibal"}, {Name: "Murdock"}, {Name: "Faceman"}, {Name: "Baracus"},
-		},
+	type Serie struct {
+		Cast []Cast
 	}
 
-	value, _ := LookupString(teams, "a-team.Name")
-	fmt.Println(value.Interface())
-	// Output: [Hannibal Murdock Faceman Baracus]
+	series := map[string]Serie{
+		"A-Team": {Cast: []Cast{
+			{Actor: "George Peppard", Role: "Hannibal"},
+			{Actor: "Dwight Schultz", Role: "Murdock"},
+			{Actor: "Mr. T", Role: "Baracus"},
+			{Actor: "Dirk Benedict", Role: "Faceman"},
+		}},
+	}
+
+	q := "A-Team.Cast.Role"
+	value, _ := LookupString(series, q)
+	fmt.Println(q, "->", value.Interface())
+
+	q = "A-Team.Cast[0].Actor"
+	value, _ = LookupString(series, q)
+	fmt.Println(q, "->", value.Interface())
+
+	// Output:
+	// A-Team.Cast.Role -> [Hannibal Murdock Baracus Faceman]
+	// A-Team.Cast[0].Actor -> George Peppard
 }
 
 func ExampleLookup() {

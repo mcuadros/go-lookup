@@ -1,3 +1,7 @@
+/*
+Small library on top of reflect for make lookups to Structs or Maps. Using a
+very simple DSL you can access to any property, key or value of any value of Go.
+*/
 package lookup
 
 import (
@@ -19,10 +23,17 @@ var (
 	ErrKeyNotFound       = errors.New("Unable to find the key")
 )
 
+// LookupString performs a lookup into a value, using a string. Same as `Loookup`
+// but using a string with the keys separated by `.`
 func LookupString(i interface{}, path string) (reflect.Value, error) {
 	return Lookup(i, strings.Split(path, SplitToken)...)
 }
 
+// Lookup performs a lookup into a value, using a path of keys. The key should
+// match with a Field or a MapIndex. For slice you can use the syntax key[index]
+// to access a specific index. If one key owns to a slice and an index is not
+// specificied the rest of the path will be apllied to evaley value of the
+// slice, and the value will be merged into a slice.
 func Lookup(i interface{}, path ...string) (reflect.Value, error) {
 	value := reflect.ValueOf(i)
 	var parent reflect.Value
