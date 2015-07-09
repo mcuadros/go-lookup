@@ -48,10 +48,11 @@ func Lookup(i interface{}, path ...string) (reflect.Value, error) {
 		}
 
 		if !isAggregable(parent) {
-			return value, err
+			break
 		}
 
 		value, err = aggreateAggregableValue(parent, path[i:])
+
 		break
 	}
 
@@ -68,12 +69,14 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 		return value, err
 	}
 	switch v.Kind() {
-	case reflect.Ptr:
+	case reflect.Ptr, reflect.Interface:
 		return getValueByName(v.Elem(), key)
 	case reflect.Struct:
 		value = v.FieldByName(key)
 	case reflect.Map:
-		value = v.MapIndex(reflect.ValueOf(key))
+		kValue := reflect.Indirect(reflect.New(v.Type().Key()))
+		kValue.SetString(key)
+		value = v.MapIndex(kValue)
 	}
 
 	if !value.IsValid() {
@@ -88,15 +91,22 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 		value = value.Index(index)
 	}
 
+	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
+		value = value.Elem()
+	}
+
 	return value, nil
 }
 
 func aggreateAggregableValue(v reflect.Value, path []string) (reflect.Value, error) {
+
 	values := make([]reflect.Value, 0)
 
 	l := v.Len()
+
 	for i := 0; i < l; i++ {
 		value, err := Lookup(v.Index(i).Interface(), path...)
+
 		if err != nil {
 			return reflect.Value{}, err
 		}
@@ -153,6 +163,7 @@ func removeZeroValues(values []reflect.Value) []reflect.Value {
 
 func isAggregable(v reflect.Value) bool {
 	k := v.Kind()
+
 	return k == reflect.Struct || k == reflect.Map || k == reflect.Slice
 }
 
