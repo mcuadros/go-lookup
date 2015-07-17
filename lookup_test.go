@@ -27,6 +27,13 @@ func (s *S) TestLookup_Ptr(c *C) {
 	c.Assert(value.String(), Equals, "foo")
 }
 
+func (s *S) TestLookup_Interface(c *C) {
+	value, err := Lookup(structFixture, "Interface")
+
+	c.Assert(err, IsNil)
+	c.Assert(value.String(), Equals, "foo")
+}
+
 func (s *S) TestLookup_StructBasic(c *C) {
 	value, err := Lookup(structFixture, "String")
 	c.Assert(err, IsNil)
@@ -35,6 +42,12 @@ func (s *S) TestLookup_StructBasic(c *C) {
 
 func (s *S) TestLookup_StructPlusMap(c *C) {
 	value, err := Lookup(structFixture, "Map", "foo")
+	c.Assert(err, IsNil)
+	c.Assert(value.Int(), Equals, int64(42))
+}
+
+func (s *S) TestLookup_MapNamed(c *C) {
+	value, err := Lookup(mapFixtureNamed, "foo")
 	c.Assert(err, IsNil)
 	c.Assert(value.Int(), Equals, int64(42))
 }
@@ -171,14 +184,19 @@ type MyStruct struct {
 	Map         map[string]int
 	Nested      *MyStruct
 	StructSlice []*MyStruct
+	Interface   interface{}
 }
 
-var mapFixutre = map[string]int{"foo": 42}
+type MyKey string
+
+var mapFixtureNamed = map[MyKey]int{"foo": 42}
+var mapFixture = map[string]int{"foo": 42}
 var structFixture = MyStruct{
-	String: "foo",
-	Map:    mapFixutre,
+	String:    "foo",
+	Map:       mapFixture,
+	Interface: "foo",
 	StructSlice: []*MyStruct{
-		{Map: mapFixutre, String: "foo", StructSlice: []*MyStruct{{String: "bar"}, {String: "foo"}}},
-		{Map: mapFixutre, String: "qux", StructSlice: []*MyStruct{{String: "qux"}, {String: "baz"}}},
+		{Map: mapFixture, String: "foo", StructSlice: []*MyStruct{{String: "bar"}, {String: "foo"}}},
+		{Map: mapFixture, String: "qux", StructSlice: []*MyStruct{{String: "qux"}, {String: "baz"}}},
 	},
 }
