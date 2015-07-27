@@ -103,6 +103,13 @@ func aggreateAggregableValue(v reflect.Value, path []string) (reflect.Value, err
 	values := make([]reflect.Value, 0)
 
 	l := v.Len()
+	if l == 0 {
+		ty, ok := lookupType(v.Type(), path...)
+		if !ok {
+			return reflect.Value{}, ErrKeyNotFound
+		}
+		return reflect.MakeSlice(reflect.SliceOf(ty), 0, 0), nil
+	}
 
 	for i := 0; i < l; i++ {
 		value, err := Lookup(v.Index(i).Interface(), path...)
@@ -194,4 +201,30 @@ func parseIndex(s string) (string, int, error) {
 	}
 
 	return s[:start], index, nil
+}
+
+func lookupType(ty reflect.Type, path ...string) (reflect.Type, bool) {
+	if len(path) == 0 {
+		return ty, true
+	}
+
+	switch ty.Kind() {
+	case reflect.Slice, reflect.Array, reflect.Map:
+		if hasIndex(path[0]) {
+			return lookupType(ty.Elem(), path[1:]...)
+		}
+		// Aggregate.
+		return lookupType(ty.Elem(), path...)
+	case reflect.Ptr:
+		return lookupType(ty.Elem(), path...)
+	case reflect.Interface:
+		// We can't know from here without a value. Let's just return this type.
+		return ty, true
+	case reflect.Struct:
+		f, ok := ty.FieldByName(path[0])
+		if ok {
+			return lookupType(f.Type, path[1:]...)
+		}
+	}
+	return nil, false
 }

@@ -83,6 +83,20 @@ func (s *S) TestAggregableLookupString_Complex(c *C) {
 	c.Assert(value.Interface(), DeepEquals, 42)
 }
 
+func (s *S) TestAggregableLookup_EmptySlice(c *C) {
+	fixture := [][]MyStruct{{}}
+	value, err := LookupString(fixture, "String")
+	c.Assert(err, IsNil)
+	c.Assert(value.Interface().([]string), DeepEquals, []string{})
+}
+
+func (s *S) TestAggregableLookup_EmptyMap(c *C) {
+	fixture := map[string]*MyStruct{}
+	value, err := LookupString(fixture, "Map")
+	c.Assert(err, IsNil)
+	c.Assert(value.Interface().([]map[string]int), DeepEquals, []map[string]int{})
+}
+
 func (s *S) TestMergeValue(c *C) {
 	v := mergeValue([]reflect.Value{reflect.ValueOf("qux"), reflect.ValueOf("foo")})
 	c.Assert(v.Interface(), DeepEquals, []string{"qux", "foo"})
