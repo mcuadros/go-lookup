@@ -99,7 +99,6 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 }
 
 func aggreateAggregableValue(v reflect.Value, path []string) (reflect.Value, error) {
-
 	values := make([]reflect.Value, 0)
 
 	l := v.Len()
@@ -111,9 +110,9 @@ func aggreateAggregableValue(v reflect.Value, path []string) (reflect.Value, err
 		return reflect.MakeSlice(reflect.SliceOf(ty), 0, 0), nil
 	}
 
+	index := indexFunction(v)
 	for i := 0; i < l; i++ {
-		value, err := Lookup(v.Index(i).Interface(), path...)
-
+		value, err := Lookup(index(i).Interface(), path...)
 		if err != nil {
 			return reflect.Value{}, err
 		}
@@ -122,6 +121,20 @@ func aggreateAggregableValue(v reflect.Value, path []string) (reflect.Value, err
 	}
 
 	return mergeValue(values), nil
+}
+
+func indexFunction(v reflect.Value) func(i int) reflect.Value {
+	switch v.Kind() {
+	case reflect.Slice:
+		return v.Index
+	case reflect.Map:
+		keys := v.MapKeys()
+		return func(i int) reflect.Value {
+			return v.MapIndex(keys[i])
+		}
+	default:
+		panic("unsuported kind for index")
+	}
 }
 
 func mergeValue(values []reflect.Value) reflect.Value {
@@ -171,7 +184,7 @@ func removeZeroValues(values []reflect.Value) []reflect.Value {
 func isAggregable(v reflect.Value) bool {
 	k := v.Kind()
 
-	return k == reflect.Struct || k == reflect.Map || k == reflect.Slice
+	return k == reflect.Map || k == reflect.Slice
 }
 
 func isMergeable(v reflect.Value) bool {

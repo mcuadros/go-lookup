@@ -52,6 +52,14 @@ func (s *S) TestLookup_MapNamed(c *C) {
 	c.Assert(value.Int(), Equals, int64(42))
 }
 
+func (s *S) TestLookup_NotFound(c *C) {
+	_, err := Lookup(structFixture, "qux")
+	c.Assert(err, Equals, ErrKeyNotFound)
+
+	_, err = Lookup(mapFixture, "qux")
+	c.Assert(err, Equals, ErrKeyNotFound)
+}
+
 func (s *S) TestAggregableLookup_StructIndex(c *C) {
 	value, err := Lookup(structFixture, "StructSlice", "Map", "foo")
 
@@ -81,6 +89,14 @@ func (s *S) TestAggregableLookupString_Complex(c *C) {
 	value, err = LookupString(structFixture, "StructSlice[0].Map.foo")
 	c.Assert(err, IsNil)
 	c.Assert(value.Interface(), DeepEquals, 42)
+
+	value, err = LookupString(mapComplexFixture, "map.bar")
+	c.Assert(err, IsNil)
+	c.Assert(value.Interface(), DeepEquals, 1)
+
+	value, err = LookupString(mapComplexFixture, "list.baz")
+	c.Assert(err, IsNil)
+	c.Assert(value.Interface(), DeepEquals, []int{1, 2, 3})
 }
 
 func (s *S) TestAggregableLookup_EmptySlice(c *C) {
@@ -212,5 +228,16 @@ var structFixture = MyStruct{
 	StructSlice: []*MyStruct{
 		{Map: mapFixture, String: "foo", StructSlice: []*MyStruct{{String: "bar"}, {String: "foo"}}},
 		{Map: mapFixture, String: "qux", StructSlice: []*MyStruct{{String: "qux"}, {String: "baz"}}},
+	},
+}
+
+var mapComplexFixture = map[string]interface{}{
+	"map": map[string]interface{}{
+		"bar": 1,
+	},
+	"list": []map[string]interface{}{
+		{"baz": 1},
+		{"baz": 2},
+		{"baz": 3},
 	},
 }
