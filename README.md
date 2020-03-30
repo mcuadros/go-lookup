@@ -1,4 +1,4 @@
-go-lookup [![Build Status](https://travis-ci.org/mcuadros/go-lookup.png?branch=master)](https://travis-ci.org/mcuadros/go-lookup) [![GoDoc](http://godoc.org/github.com/mcuadros/go-lookup?status.png)](http://godoc.org/github.com/mcuadros/go-lookup)
+go-lookup [![Build Status](https://img.shields.io/github/workflow/status/mcuadros/go-lookup/Test.svg)](https://github.com/mcuadros/go-lookup/actions) [![GoDoc](http://godoc.org/github.com/mcuadros/go-lookup?status.png)](https://pkg.go.dev/github.com/mcuadros/go-lookup)
 ==============================
 
 Small library on top of reflect for make lookups to Structs or Maps. Using a very simple DSL you can access to any property, key or value of any value of Go.
