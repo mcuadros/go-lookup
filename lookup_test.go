@@ -163,6 +163,17 @@ func (s *S) TestParseIndexMalFormed(c *C) {
 	c.Assert(index, Equals, -1)
 }
 
+func (s *S) TestLookup_CaseSensitive(c *C) {
+	_, err := Lookup(structFixture, "STring")
+	c.Assert(err, Equals, ErrKeyNotFound)
+}
+
+func (s *S) TestLookup_CaseInsensitive(c *C) {
+	value, err := LookupI(structFixture, "STring")
+	c.Assert(err, IsNil)
+	c.Assert(value.String(), Equals, "foo")
+}
+
 func ExampleLookupString() {
 	type Cast struct {
 		Actor, Role string
