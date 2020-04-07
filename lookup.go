@@ -87,16 +87,44 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 	case reflect.Ptr, reflect.Interface:
 		return getValueByName(v.Elem(), key, caseInsensitive)
 	case reflect.Struct:
-		value = v.FieldByName(key)
-		if caseInsensitive && value.Kind() == reflect.Invalid {
-			value = v.FieldByNameFunc(func(name string) bool {
-				return strings.EqualFold(name, key)
-			})
+		// We don't use FieldByNameFunc and friends, since they return an empty
+		// value if there are multiple fields with the same name. Instead, we
+		// iterate ourselves.
+
+		vType := v.Type()
+
+		// Prefer case sensitive match
+		for i := 0; i < v.NumField(); i++ {
+			if vType.Field(i).Name == key {
+				value = v.Field(i)
+				break
+			}
 		}
+
+		// Look for case insensitive match
+		if caseInsensitive && value.Kind() == reflect.Invalid {
+			for i := 0; i < v.NumField(); i++ {
+				if strings.EqualFold(vType.Field(i).Name, key) {
+					value = v.Field(i)
+					break
+				}
+			}
+		}
+
 	case reflect.Map:
 		kValue := reflect.Indirect(reflect.New(v.Type().Key()))
 		kValue.SetString(key)
 		value = v.MapIndex(kValue)
+		if caseInsensitive && value.Kind() == reflect.Invalid {
+			iter := v.MapRange()
+			for iter.Next() {
+				if strings.EqualFold(key, iter.Key().String()) {
+					kValue.SetString(iter.Key().String())
+					value = v.MapIndex(kValue)
+					break
+				}
+			}
+		}
 	}
 
 	if !value.IsValid() {
