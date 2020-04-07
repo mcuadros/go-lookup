@@ -46,20 +46,20 @@ fmt.Println(q, "->", value.Interface())
 
 ### Case-insensitive matching
 
-Use the `LookupI` and `LookupStringI` functions to do a case-insensitive match on struct field names and map keys. It will first try an exact match, if that fails, it will fall back to a more expensive linear search over fields/keys.
+Use the `LookupI` and `LookupStringI` functions to do a case-insensitive match on struct field names and map keys. It will first look for an exact match; if that fails, it will fall back to a more expensive linear search over fields/keys.
 
 ```go
- type ExampleStruct struct {
+type ExampleStruct struct {
   SoftwareUpdated bool
-  }
+}
 
-  i := ExampleStruct{
-    SoftwareUpdated: true,
-  }
+i := ExampleStruct{
+  SoftwareUpdated: true,
+}
 
-  value, _ := LookupStringI(i, "softwareupdated")
-  fmt.Println(value.Interface())
-  // Output: true
+value, _ := LookupStringI(i, "softwareupdated")
+fmt.Println(value.Interface())
+// Output: true
 ```
 
 License
