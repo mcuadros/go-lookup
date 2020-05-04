@@ -23,7 +23,7 @@ var (
 	ErrKeyNotFound       = errors.New("Unable to find the key")
 )
 
-// LookupString performs a lookup into a value, using a string. Same as `Loookup`
+// LookupString performs a lookup into a value, using a string. Same as `Lookup`
 // but using a string with the keys separated by `.`
 func LookupString(i interface{}, path string) (reflect.Value, error) {
 	return Lookup(i, strings.Split(path, SplitToken)...)
