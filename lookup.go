@@ -23,10 +23,16 @@ var (
 	ErrKeyNotFound       = errors.New("Unable to find the key")
 )
 
-// LookupString performs a lookup into a value, using a string. Same as `Loookup`
+// LookupString performs a lookup into a value, using a string. Same as `Lookup`
 // but using a string with the keys separated by `.`
 func LookupString(i interface{}, path string) (reflect.Value, error) {
 	return Lookup(i, strings.Split(path, SplitToken)...)
+}
+
+// LookupStringI is the same as LookupString, but the path is not case
+// sensitive.
+func LookupStringI(i interface{}, path string) (reflect.Value, error) {
+	return LookupI(i, strings.Split(path, SplitToken)...)
 }
 
 // Lookup performs a lookup into a value, using a path of keys. The key should
@@ -35,6 +41,15 @@ func LookupString(i interface{}, path string) (reflect.Value, error) {
 // specificied the rest of the path will be apllied to evaley value of the
 // slice, and the value will be merged into a slice.
 func Lookup(i interface{}, path ...string) (reflect.Value, error) {
+	return lookup(i, false, path...)
+}
+
+// LookupI is the same as Lookup, but the path keys are not case sensitive.
+func LookupI(i interface{}, path ...string) (reflect.Value, error) {
+	return lookup(i, true, path...)
+}
+
+func lookup(i interface{}, caseInsensitive bool, path ...string) (reflect.Value, error) {
 	value := reflect.ValueOf(i)
 	var parent reflect.Value
 	var err error
@@ -42,7 +57,7 @@ func Lookup(i interface{}, path ...string) (reflect.Value, error) {
 	for i, part := range path {
 		parent = value
 
-		value, err = getValueByName(value, part)
+		value, err = getValueByName(value, part, caseInsensitive)
 		if err == nil {
 			continue
 		}
@@ -59,7 +74,7 @@ func Lookup(i interface{}, path ...string) (reflect.Value, error) {
 	return value, err
 }
 
-func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
+func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.Value, error) {
 	var value reflect.Value
 	var index int
 	var err error
@@ -70,13 +85,36 @@ func getValueByName(v reflect.Value, key string) (reflect.Value, error) {
 	}
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Interface:
-		return getValueByName(v.Elem(), key)
+		return getValueByName(v.Elem(), key, caseInsensitive)
 	case reflect.Struct:
 		value = v.FieldByName(key)
+
+		if caseInsensitive && value.Kind() == reflect.Invalid {
+			// We don't use FieldByNameFunc, since it returns zero value if the
+			// match func matches multiple fields. Iterate here and return the
+			// first matching field.
+			for i := 0; i < v.NumField(); i++ {
+				if strings.EqualFold(v.Type().Field(i).Name, key) {
+					value = v.Field(i)
+					break
+				}
+			}
+		}
+
 	case reflect.Map:
 		kValue := reflect.Indirect(reflect.New(v.Type().Key()))
 		kValue.SetString(key)
 		value = v.MapIndex(kValue)
+		if caseInsensitive && value.Kind() == reflect.Invalid {
+			iter := v.MapRange()
+			for iter.Next() {
+				if strings.EqualFold(key, iter.Key().String()) {
+					kValue.SetString(iter.Key().String())
+					value = v.MapIndex(kValue)
+					break
+				}
+			}
+		}
 	}
 
 	if !value.IsValid() {

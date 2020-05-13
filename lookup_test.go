@@ -163,6 +163,58 @@ func (s *S) TestParseIndexMalFormed(c *C) {
 	c.Assert(index, Equals, -1)
 }
 
+func (s *S) TestLookup_CaseSensitive(c *C) {
+	_, err := Lookup(structFixture, "STring")
+	c.Assert(err, Equals, ErrKeyNotFound)
+}
+
+func (s *S) TestLookup_CaseInsensitive(c *C) {
+	value, err := LookupI(structFixture, "STring")
+	c.Assert(err, IsNil)
+	c.Assert(value.String(), Equals, "foo")
+}
+
+func (s *S) TestLookup_CaseInsensitive_ExactMatch(c *C) {
+	value, err := LookupI(caseFixtureStruct, "Testfield")
+	c.Assert(err, IsNil)
+	c.Assert(value.Int(), Equals, int64(2))
+}
+
+func (s *S) TestLookup_CaseInsensitive_FirstMatch(c *C) {
+	value, err := LookupI(caseFixtureStruct, "testfield")
+	c.Assert(err, IsNil)
+	c.Assert(value.Int(), Equals, int64(1))
+}
+
+func (s *S) TestLookup_CaseInsensitiveExactMatch(c *C) {
+	value, err := LookupI(structFixture, "STring")
+	c.Assert(err, IsNil)
+	c.Assert(value.String(), Equals, "foo")
+}
+
+func (s *S) TestLookup_Map_CaseSensitive(c *C) {
+	_, err := Lookup(map[string]int{"Foo": 42}, "foo")
+	c.Assert(err, Equals, ErrKeyNotFound)
+}
+
+func (s *S) TestLookup_Map_CaseInsensitive(c *C) {
+	value, err := LookupI(map[string]int{"Foo": 42}, "foo")
+	c.Assert(err, IsNil)
+	c.Assert(value.Int(), Equals, int64(42))
+}
+
+func (s *S) TestLookup_Map_CaseInsensitive_ExactMatch(c *C) {
+	value, err := LookupI(caseFixtureMap, "Testkey")
+	c.Assert(err, IsNil)
+	c.Assert(value.Int(), Equals, int64(2))
+}
+
+func (s *S) TestLookup_Map_CaseInsensitive_FirstMatch(c *C) {
+	value, err := LookupI(caseFixtureMap, "testkey")
+	c.Assert(err, IsNil)
+	c.Assert(value.Int(), Equals, int64(1))
+}
+
 func ExampleLookupString() {
 	type Cast struct {
 		Actor, Role string
@@ -209,6 +261,20 @@ func ExampleLookup() {
 	// Output: 10
 }
 
+func ExampleCaseInsensitive() {
+	type ExampleStruct struct {
+		SoftwareUpdated bool
+	}
+
+	i := ExampleStruct{
+		SoftwareUpdated: true,
+	}
+
+	value, _ := LookupStringI(i, "softwareupdated")
+	fmt.Println(value.Interface())
+	// Output: true
+}
+
 type MyStruct struct {
 	String      string
 	Map         map[string]int
@@ -240,4 +306,20 @@ var mapComplexFixture = map[string]interface{}{
 		{"baz": 2},
 		{"baz": 3},
 	},
+}
+
+var caseFixtureStruct = struct {
+	Foo       int
+	TestField int
+	Testfield int
+	testField int
+}{
+	0, 1, 2, 3,
+}
+
+var caseFixtureMap = map[string]int{
+	"Foo":     0,
+	"TestKey": 1,
+	"Testkey": 2,
+	"testKey": 3,
 }
