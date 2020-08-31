@@ -76,7 +76,7 @@ func lookup(i interface{}, caseInsensitive bool, path ...string) (reflect.Value,
 
 func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.Value, error) {
 	var value reflect.Value
-	var index int
+	var index int = -1
 	var err error
 
 	key, index, err = parseIndex(key)
@@ -122,6 +122,10 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 	}
 
 	if index != -1 {
+		if value.Kind() == reflect.Ptr {
+			value = value.Elem()
+		}
+
 		if value.Type().Kind() != reflect.Slice {
 			return reflect.Value{}, ErrInvalidIndexUsage
 		}

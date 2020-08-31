@@ -215,6 +215,23 @@ func (s *S) TestLookup_Map_CaseInsensitive_FirstMatch(c *C) {
 	c.Assert(value.Int(), Equals, int64(1))
 }
 
+func (s *S) TestLookup_ListPtr(c *C) {
+	type Inner struct {
+		Value string
+	}
+
+	type Outer struct {
+		Values *[]Inner
+	}
+
+	values := []Inner{{Value: "first"}, {Value: "second"}}
+	data := Outer{Values: &values}
+
+	value, err := LookupStringI(data, "Values[0].Value")
+	c.Assert(err, IsNil)
+	c.Assert(value.String(), Equals, "first")
+}
+
 func ExampleLookupString() {
 	type Cast struct {
 		Actor, Role string
