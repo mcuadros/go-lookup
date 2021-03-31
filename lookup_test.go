@@ -232,6 +232,16 @@ func (s *S) TestLookup_ListPtr(c *C) {
 	c.Assert(value.String(), Equals, "first")
 }
 
+func (s *S) TestLookup_ListInterface(c *C) {
+	data := map[string]interface{}{
+		"values": []string{"first", "second"}
+	}
+
+	value, err := LookupStringI(data, "values[0]")
+	c.Assert(err, IsNil)
+	c.Assert(value.String(), Equals, "first")
+}
+
 func ExampleLookupString() {
 	type Cast struct {
 		Actor, Role string
