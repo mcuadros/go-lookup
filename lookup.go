@@ -120,6 +120,10 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 	if !value.IsValid() {
 		return reflect.Value{}, ErrKeyNotFound
 	}
+	
+	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
+		value = value.Elem()
+	}
 
 	if index != -1 {
 		if value.Kind() == reflect.Ptr {
@@ -131,10 +135,6 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 		}
 
 		value = value.Index(index)
-	}
-
-	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
-		value = value.Elem()
 	}
 
 	return value, nil
