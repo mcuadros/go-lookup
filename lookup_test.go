@@ -234,7 +234,7 @@ func (s *S) TestLookup_ListPtr(c *C) {
 
 func (s *S) TestLookup_ListInterface(c *C) {
 	data := map[string]interface{}{
-		"values": []string{"first", "second"}
+		"values": []string{"first","second"},
 	}
 
 	value, err := LookupStringI(data, "values[0]")
