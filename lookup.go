@@ -85,7 +85,14 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 	}
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Interface:
-		return getValueByName(v.Elem(), key, caseInsensitive)
+		value, err := getValueByName(v.Elem(), key, caseInsensitive)
+		if err != nil {
+			return value, err
+		}
+		if index != -1 {
+			value = value.Index(index)
+		}
+		return value, nil
 	case reflect.Struct:
 		value = v.FieldByName(key)
 
@@ -120,7 +127,7 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 	if !value.IsValid() {
 		return reflect.Value{}, ErrKeyNotFound
 	}
-	
+
 	if value.Kind() == reflect.Ptr || value.Kind() == reflect.Interface {
 		value = value.Elem()
 	}

@@ -84,7 +84,7 @@ func (s *S) TestAggregableLookup_StructNested(c *C) {
 func (s *S) TestAggregableLookupString_Complex(c *C) {
 	value, err := LookupString(structFixture, "StructSlice.StructSlice[0].String")
 	c.Assert(err, IsNil)
-	c.Assert(value.Interface(), DeepEquals, []string{"bar", "foo", "qux", "baz"})
+	c.Assert(value.Interface(), DeepEquals, []string{"bar", "qux"})
 
 	value, err = LookupString(structFixture, "StructSlice[0].Map.foo")
 	c.Assert(err, IsNil)
