@@ -84,7 +84,7 @@ func (s *S) TestAggregableLookup_StructNested(c *C) {
 func (s *S) TestAggregableLookupString_Complex(c *C) {
 	value, err := LookupString(structFixture, "StructSlice.StructSlice[0].String")
 	c.Assert(err, IsNil)
-	c.Assert(value.Interface(), DeepEquals, []string{"bar", "foo", "qux", "baz"})
+	c.Assert(value.Interface(), DeepEquals, []string{"bar", "qux"})
 
 	value, err = LookupString(structFixture, "StructSlice[0].Map.foo")
 	c.Assert(err, IsNil)
@@ -128,7 +128,7 @@ func (s *S) TestMergeValueSlice(c *C) {
 }
 
 func (s *S) TestMergeValueZero(c *C) {
-	v := mergeValue([]reflect.Value{reflect.Value{}, reflect.ValueOf("foo")})
+	v := mergeValue([]reflect.Value{{}, reflect.ValueOf("foo")})
 	c.Assert(v.Interface(), DeepEquals, []string{"foo"})
 }
 
@@ -232,6 +232,18 @@ func (s *S) TestLookup_ListPtr(c *C) {
 	c.Assert(value.String(), Equals, "first")
 }
 
+func (s *S) TestLookup_Ptr_Index(c *C) {
+	ptr := &structFixture
+	value, err := LookupString(ptr, "StructSlice[1].String")
+	c.Assert(err, IsNil)
+	c.Assert(value.String(), Equals, "qux")
+}
+
+func (s *S) TestLookup_IndexOutOfBounds(c *C) {
+	_, err := LookupString(structFixture, "StructSlice[42].String")
+	c.Assert(err, Equals, ErrIndexOutOfBounds)
+}
+
 func ExampleLookupString() {
 	type Cast struct {
 		Actor, Role string
@@ -278,7 +290,7 @@ func ExampleLookup() {
 	// Output: 10
 }
 
-func ExampleCaseInsensitive() {
+func ExampleLookupStringI() {
 	type ExampleStruct struct {
 		SoftwareUpdated bool
 	}

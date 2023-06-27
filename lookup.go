@@ -18,9 +18,10 @@ const (
 )
 
 var (
-	ErrMalformedIndex    = errors.New("Malformed index key")
-	ErrInvalidIndexUsage = errors.New("Invalid index key usage")
-	ErrKeyNotFound       = errors.New("Unable to find the key")
+	ErrMalformedIndex    = errors.New("malformed index key")
+	ErrInvalidIndexUsage = errors.New("invalid index key usage")
+	ErrKeyNotFound       = errors.New("unable to find the key")
+	ErrIndexOutOfBounds  = errors.New("index out of bounds")
 )
 
 // LookupString performs a lookup into a value, using a string. Same as `Lookup`
@@ -79,13 +80,14 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 	var index int = -1
 	var err error
 
+	prevKey := key
 	key, index, err = parseIndex(key)
 	if err != nil {
 		return value, err
 	}
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Interface:
-		return getValueByName(v.Elem(), key, caseInsensitive)
+		return getValueByName(v.Elem(), prevKey, caseInsensitive)
 	case reflect.Struct:
 		value = v.FieldByName(key)
 
@@ -128,6 +130,10 @@ func getValueByName(v reflect.Value, key string, caseInsensitive bool) (reflect.
 
 		if value.Type().Kind() != reflect.Slice {
 			return reflect.Value{}, ErrInvalidIndexUsage
+		}
+
+		if value.Len() <= index {
+			return reflect.Value{}, ErrIndexOutOfBounds
 		}
 
 		value = value.Index(index)
