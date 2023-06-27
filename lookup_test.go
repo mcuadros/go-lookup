@@ -97,6 +97,15 @@ func (s *S) TestAggregableLookupString_Complex(c *C) {
 	value, err = LookupString(mapComplexFixture, "list.baz")
 	c.Assert(err, IsNil)
 	c.Assert(value.Interface(), DeepEquals, []int{1, 2, 3})
+
+	value, err = LookupString(mapComplexFixture, "list")
+	c.Assert(err, IsNil)
+	c.Assert(value.Interface(), DeepEquals, []map[string]interface{}{
+		{"baz": 1},
+		{"baz": 2},
+		{"baz": 3},
+	})
+
 }
 
 func (s *S) TestAggregableLookup_EmptySlice(c *C) {

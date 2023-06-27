@@ -194,7 +194,6 @@ func mergeValue(values []reflect.Value) reflect.Value {
 
 	sample := values[0]
 	mergeable := isMergeable(sample)
-
 	t := sample.Type()
 	if mergeable {
 		t = t.Elem()
@@ -236,12 +235,11 @@ func isAggregable(v reflect.Value) bool {
 }
 
 func isMergeable(v reflect.Value) bool {
-	k := v.Kind()
-	return k == reflect.Map || k == reflect.Slice
+	return v.Kind() == reflect.Slice
 }
 
 func hasIndex(s string) bool {
-	return strings.Index(s, IndexOpenChar) != -1
+	return strings.Contains(s, IndexOpenChar)
 }
 
 func parseIndex(s string) (string, int, error) {
